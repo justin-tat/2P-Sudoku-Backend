@@ -1,0 +1,26 @@
+{
+  "name": "2p-sudoku-backend",
+  "version": "1.0.0",
+  "description": "Backend for microservices oriented app",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "server": "npx nodemon ./server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justin-tat/2P-Sudoku-Backend.git"
+  },
+  "author": "Justin Tat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/justin-tat/2P-Sudoku-Backend/issues"
+  },
+  "homepage": "https://github.com/justin-tat/2P-Sudoku-Backend#readme",
+  "devDependencies": {
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.16",
+    "path": "^0.12.7"
+  }
+}
