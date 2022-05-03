@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.port || 3000;
 
 app.get('/', (req, res) => {
-  console.log('You found me in the console');
+  
   res.send('You found me');
 })
 
