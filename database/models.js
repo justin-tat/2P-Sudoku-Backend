@@ -11,6 +11,8 @@ const pool = new Pool({
   idleTimoutMillis: 1000
 });
 
+module.exports = { pool };
+
 //Example Insert into statement:
   //INSERT INTO users (name, email, password, rating, difficulty) VALUES('justin', 'jtat5912@gmail.com', 'HellYa', 1000, 'easy');
   //Just don't specify id and you're fine
