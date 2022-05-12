@@ -27,7 +27,6 @@ userRouter.get('/verifyAccount', (req, res) => {
     if (+response.rows[0].count !== 0) {
       throw new Error('That email is already taken!');
     }
-    console.log('Made it to the end');
     res.send("You're big chillin");
     res.end();
   })
@@ -39,7 +38,6 @@ userRouter.get('/verifyAccount', (req, res) => {
 });
 
 userRouter.get('/getAccount', (req, res) => {
-  console.log(req.query);
   pool.query('SELECT password, rating, difficulty FROM users WHERE name = $1', [req.query.username])
   .then(response => {
     //console.log('user:', res.rows[0])
@@ -49,7 +47,6 @@ userRouter.get('/getAccount', (req, res) => {
     else if (response.rows[0].password !== req.query.password) {
       throw new Error('Password did not match');
     }
-    console.log("response of select statement: ", response.rows)
   })
   .catch(err => {
     //console.log(String(err));
@@ -61,7 +58,6 @@ userRouter.get('/getAccount', (req, res) => {
     return Promise.reject('Unknown err ' + err);
   })
   .then(response => {
-    console.log('Made it to the end of getAccount');
     res.send("You're big chillin");
     //res.end();
   })
@@ -80,7 +76,6 @@ userRouter.post('/makeAccount', (req, res) => {
   let info = req.query;
   pool.query("INSERT INTO users (name, email, password, rating, difficulty) VALUES($1, $2, $3, 1000, 'easy')", [info.username, info.email, info.password])
   .then(() => {
-    console.log('Successfully updated users table');
     res.send('Successfully made account');
   })
   .catch(err => {
