@@ -38,15 +38,16 @@ userRouter.get('/verifyAccount', (req, res) => {
 });
 
 userRouter.get('/getAccount', (req, res) => {
-  pool.query('SELECT password, rating, difficulty FROM users WHERE name = $1', [req.query.username])
+  pool.query('SELECT id, password, rating, difficulty FROM users WHERE name = $1', [req.query.username])
   .then(response => {
-    //console.log('user:', res.rows[0])
+    //console.log('user:', response.rows[0])
     if (response.rows.length === 0) {
       throw new Error('Username not found');
     }
     else if (response.rows[0].password !== req.query.password) {
       throw new Error('Password did not match');
     }
+    return response.rows[0];
   })
   .catch(err => {
     //console.log(String(err));
@@ -58,8 +59,7 @@ userRouter.get('/getAccount', (req, res) => {
     return Promise.reject('Unknown err ' + err);
   })
   .then(response => {
-    res.send("You're big chillin");
-    //res.end();
+    res.send(response);
   })
   .catch(err => {
     console.log(String(err));
