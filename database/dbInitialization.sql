@@ -24,6 +24,8 @@ CREATE TABLE games (
   id SERIAL PRIMARY KEY,
   p1_id INT NOT NULL,
   p2_id INT NOT NULL,
+  p1_name VARCHAR(80) NOT NULL,
+  p2_name VARCHAR(80) NOT NULL,
   p1_rating INT NOT NULL,
   p2_rating INT NOT NULL,
   is_finished BOOLEAN DEFAULT FALSE,

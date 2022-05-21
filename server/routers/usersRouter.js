@@ -38,6 +38,7 @@ userRouter.get('/verifyAccount', (req, res) => {
 });
 
 userRouter.get('/getAccount', (req, res) => {
+  console.log('Got getAccount request: ', req.query.username);
   pool.query('SELECT id, name, password, rating, difficulty, board_id FROM users WHERE name = $1', [req.query.username])
   .then(response => {
     //console.log('user:', response.rows[0])
