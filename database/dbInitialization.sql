@@ -40,6 +40,7 @@ CREATE TABLE boards (
   gametime TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
   player_mistakes SMALLINT DEFAULT 0,
   board_state VARCHAR(200) NOT NULL,
+  board_solution VARCHAR(200) NOT NULL,
   FOREIGN KEY (player_id) REFERENCES users(id),
   FOREIGN KEY (game_id) REFERENCES games(id)
 );

@@ -19,7 +19,8 @@ const credentials = {
 
 const app = express();
 const port = process.env.port || 3000;
-const server = require('http').createServer(credentials, app);
+//const server = require('https').createServer(credentials, app);
+const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 const { pool } = require('../database/models.js');
@@ -40,7 +41,7 @@ const helpers = require('./helpers.js');
         2b.4: Once a player joins, Update tables
             2b.4a. Join the room. Then emit to the room. On opponentFound, do the rest of the stuff. 
             2b.4b:  Insert a record into games with both players info
-            2b.4c: Pass gameID and playerIDs to boards and create 2 entries in boards (p1 and p2)
+            2b.4c: Pass gameID and playerIDs to boards and create 2 entries in boards (p1 and p2) (promise.all)
             2b.4d: Find userID in users table and update users table with board id for each player
             2b.4e: Respond to client which should then update state variables and remove modal by setting flag in state
 3. When the player finishes, update boardState, numMistakes, whole shebang for boards
@@ -52,12 +53,8 @@ io.on("connection", socket => {
   // console.log('A user connected');
   // console.log('socket.rooms:', socket.rooms);
   let opponent = '';
-  console.log('Socket id: ', socket.id);
+  //console.log('Socket id: ', socket.id);
   console.log('rooms on connection: ', socket.adapter.rooms);
-
-  //Just for testing
-  //opponent = helpers.findOpponent("", socket.adapter.rooms);
-
 
   socket.on("findGame", userInfo => {
     //Try to find a socketIO room with a comparable rating (less than 100 point difference)
@@ -79,8 +76,8 @@ io.on("connection", socket => {
     }
     //io.emit("Potential Game", msg);
   });
-  socket.on('gameRecordCreated', () => {
-    io.to(opponent).emit('startGame')
+  socket.on('gameRecordCreated', (info) => {
+    io.to(info.opponent).emit('startGame', info);
   })
   socket.on('end', function (){
     console.log('Ending socket connection');
