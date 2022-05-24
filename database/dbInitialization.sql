@@ -38,6 +38,7 @@ CREATE TABLE boards (
   player_id INT NOT NULL,
   game_id INT NOT NULL,
   gametime TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  holes INT DEFAULT 0,
   player_mistakes SMALLINT DEFAULT 0,
   board_state VARCHAR(200) NOT NULL,
   board_solution VARCHAR(200) NOT NULL,

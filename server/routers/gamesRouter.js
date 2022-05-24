@@ -46,4 +46,13 @@ gameRouter.post('/makeGame', (req, res) => {
   //res.send('Barebones gameRouter');
 });
 
+gameRouter.get('/getGame', (req, res) => {
+  pool.query('SELECT board_state, player_mistakes, holes, board_solution FROM games WHERE id = $1', [req.query.id])
+  .then(info => {
+    res.send(info.rows[0]);
+  }) 
+})
+
+
+
 module.exports = gameRouter;
