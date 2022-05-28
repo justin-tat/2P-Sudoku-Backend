@@ -21,9 +21,22 @@ gameRouter.post('/makeGame', (req, res) => {
     let holes = 25;
     let boardState = generateUniqueBoard(holes);
     boardState[1] = JSON.stringify(boardState[1]);
-    boardState[2] = JSON.stringify(boardState[2]);
-    let p1 = {gameId: info.id, playerId: info.p1_id, boardState: boardState[1], boardSolution: boardState[2]};
-    let p2 = {gameId: info.id, playerId: info.p2_id, boardState: boardState[1], boardSolution: boardState[2]};
+    boardState[2] = JSON.stringify(boardState[2]); 
+    let p1 = {
+      gameId: info.id, 
+      playerId: info.p1_id, 
+      boardState: boardState[1], 
+      boardSolution: boardState[2],
+      answerableCells: boardState[1]
+    };
+    let p2 = {
+      gameId: info.id, 
+      playerId: info.p2_id, 
+      boardState: boardState[1], 
+      boardSolution: boardState[2], 
+      answerableCells: boardState[1]
+    };
+
     return Promise.all([helpers.makeBoard(p1, pool), helpers.makeBoard(p2, pool), holes]);
   })
   .then(arr => {
@@ -47,7 +60,7 @@ gameRouter.post('/makeGame', (req, res) => {
 });
 
 gameRouter.get('/getGame', (req, res) => {
-  pool.query('SELECT board_state, player_mistakes, holes, board_solution FROM games WHERE id = $1', [req.query.id])
+  pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
     res.send(info.rows[0]);
   }) 

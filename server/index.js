@@ -11,10 +11,10 @@ const ipAddress = ip.address();
 //   cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'), {encoding: 'utf8'} )
 // };
 
-const credentials = {
-  key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
-};
+// const credentials = {
+//   key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+//   cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
+// };
 //console.log(credentials);
 
 const app = express();
@@ -50,28 +50,16 @@ const helpers = require('./helpers.js');
 5. Grab userId from games table. Set currentGameId on users to 0 and update rating accordingly
 */
 io.on("connection", socket => {
-  // console.log('A user connected');
-  // console.log('socket.rooms:', socket.rooms);
   let opponent = '';
-  //console.log('Socket id: ', socket.id);
-  console.log('rooms on connection: ', socket.adapter.rooms);
 
   socket.on("findGame", userInfo => {
-    //Try to find a socketIO room with a comparable rating (less than 100 point difference)
-    //socket.join(`${userInfo.rating} ${userInfo.name}`);
-    //console.log('userInfo from index: ', userInfo);
+    console.log(socket.adapter.rooms);
     opponent = helpers.findOpponent(userInfo, socket.adapter.rooms);
-    //console.log("opponent: " + opponent);
     if (opponent === '') {
-      //console.log('Opponent not found');
       io.to(socket.id).emit('waitingForOpponent');
       socket.join(`${userInfo.rating} ${userInfo.id} ${userInfo.name}`);
-      //console.log('Should be joining a room: ', socket.adapter.rooms);
     } else {
-      //console.log(`${opponent} found`);
       socket.join(opponent);
-      //io.to(opponent).emit('opponentFound');
-      //console.log(socket.id);
       io.to(socket.id).emit('makeRecord', opponent);
     }
     //io.emit("Potential Game", msg);

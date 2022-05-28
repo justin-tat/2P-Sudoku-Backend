@@ -42,6 +42,7 @@ CREATE TABLE boards (
   player_mistakes SMALLINT DEFAULT 0,
   board_state VARCHAR(200) NOT NULL,
   board_solution VARCHAR(200) NOT NULL,
+  answerable_cells VARCHAR(200) NOT NULL,
   FOREIGN KEY (player_id) REFERENCES users(id),
   FOREIGN KEY (game_id) REFERENCES games(id)
 );
