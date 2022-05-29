@@ -27,14 +27,17 @@ gameRouter.post('/makeGame', (req, res) => {
       playerId: info.p1_id, 
       boardState: boardState[1], 
       boardSolution: boardState[2],
-      answerableCells: boardState[1]
+      answerableCells: boardState[1],
+      holes: holes
     };
+
     let p2 = {
       gameId: info.id, 
       playerId: info.p2_id, 
       boardState: boardState[1], 
       boardSolution: boardState[2], 
-      answerableCells: boardState[1]
+      answerableCells: boardState[1],
+      holes: holes
     };
 
     return Promise.all([helpers.makeBoard(p1, pool), helpers.makeBoard(p2, pool), holes]);
@@ -50,6 +53,7 @@ gameRouter.post('/makeGame', (req, res) => {
     let p1 = toUsers[0].rows[0].id;
     let p2 = toUsers[1].rows[0].id;
     let board = {boardState: toUsers[2], boardSolution: toUsers[3], holes: toUsers[4]};
+    console.log('board: ', board);
     res.json(board);
   })
   .catch(err => {
@@ -60,10 +64,15 @@ gameRouter.post('/makeGame', (req, res) => {
 });
 
 gameRouter.get('/getGame', (req, res) => {
+  //console.log('req.query.boardId:', typeof(req.query.boardId));
   pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
     res.send(info.rows[0]);
-  }) 
+  })
+  .catch(err => {
+    console.log('Error in getGame: ', err);
+    res.status(500).send('Server errored while fetching continued game');
+  })
 })
 
 
