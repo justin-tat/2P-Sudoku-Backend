@@ -60,11 +60,9 @@ gameRouter.post('/makeGame', (req, res) => {
     console.log('error in makeGame', err);
     res.status(500).send('Server errored while making game');
   })
-  //res.send('Barebones gameRouter');
 });
 
 gameRouter.get('/getGame', (req, res) => {
-  //console.log('req.query.boardId:', typeof(req.query.boardId));
   pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
     res.send(info.rows[0]);
@@ -75,6 +73,14 @@ gameRouter.get('/getGame', (req, res) => {
   })
 })
 
+gameRouter.put('/updateGame', (req, res) => {
+  let args = req.body.params;
+  let board = JSON.stringify(args.boardState)
+  pool.query('UPDATE boards SET board_state = $1, player_mistakes = player_mistakes + $2 WHERE id = $3', [board, args.incorrectTiles.length, args.boardId])
+  .then(() => {
+    res.send('Successfully updated game');
+  })
+})
 
 
 module.exports = gameRouter;
