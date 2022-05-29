@@ -15,6 +15,7 @@ gameRouter.post('/makeGame', (req, res) => {
   let info = req.body.params;
   let p1 = info.playerOne;
   let p2 = info.playerTwo;
+  console.log('Inserting something into games');
   pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
   .then(id => {
     let info = id.rows[0];
@@ -76,7 +77,7 @@ gameRouter.get('/getGame', (req, res) => {
 gameRouter.put('/updateGame', (req, res) => {
   let args = req.body.params;
   let board = JSON.stringify(args.boardState)
-  pool.query('UPDATE boards SET board_state = $1, player_mistakes = player_mistakes + $2 WHERE id = $3', [board, args.incorrectTiles.length, args.boardId])
+  pool.query('UPDATE boards SET board_state = $1, player_mistakes = player_mistakes + $2 WHERE id = $3', [board, Object.keys(args.incorrectTiles).length, args.boardId])
   .then(() => {
     res.send('Successfully updated game');
   })
