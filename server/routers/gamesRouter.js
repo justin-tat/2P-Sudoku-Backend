@@ -18,7 +18,7 @@ gameRouter.post('/makeGame', (req, res) => {
   pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
   .then(id => {
     let info = id.rows[0];
-    let holes = 25;
+    let holes = 5;
     let boardState = generateUniqueBoard(holes);
     boardState[1] = JSON.stringify(boardState[1]);
     boardState[2] = JSON.stringify(boardState[2]); 
