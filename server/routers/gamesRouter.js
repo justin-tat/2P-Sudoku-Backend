@@ -15,11 +15,10 @@ gameRouter.post('/makeGame', (req, res) => {
   let info = req.body.params;
   let p1 = info.playerOne;
   let p2 = info.playerTwo;
-  //console.log('Inserting something into games');
   pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
   .then(id => {
     let info = id.rows[0];
-    let holes = 5;
+    let holes = 1;
     let boardState = generateUniqueBoard(holes);
     boardState[1] = JSON.stringify(boardState[1]);
     boardState[2] = JSON.stringify(boardState[2]); 
@@ -54,7 +53,7 @@ gameRouter.post('/makeGame', (req, res) => {
     let p1 = toUsers[0].rows[0].id;
     let p2 = toUsers[1].rows[0].id;
     let board = {boardState: toUsers[2], boardSolution: toUsers[3], holes: toUsers[4]};
-    res.json(board);
+    res.send(board);
   })
   .catch(err => {
     console.log('error in makeGame', err);
@@ -63,9 +62,20 @@ gameRouter.post('/makeGame', (req, res) => {
 });
 
 gameRouter.get('/getGame', (req, res) => {
-  pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells FROM boards WHERE id = $1', [req.query.boardId])
+  pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells, game_id FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
-    res.send(info.rows[0]);
+
+    //res.send(info.rows[0]);
+    //console.log(info.rows[0]);
+    return Promise.all([info.rows[0], helpers.gameStatus(info.rows[0].game_id, pool)]);
+  })
+  .then(gameStatus => {
+    if (gameStatus[1].rows[0].is_finished) {
+      res.send('You lost');
+    } else {
+      res.send(gameStatus[0]);
+    }
+    
   })
   .catch(err => {
     console.log('Error in getGame: ', err);
@@ -82,8 +92,30 @@ gameRouter.put('/updateGame', (req, res) => {
   })
 });
 
+/*
+1. Determine whether game ended or not
+  1a.If it did not, then find the userIds from the games table modify the userIds and update the game to finished in games
+    1a.1. Send win message
+  1b. If it did then just send the lose message
 
+*/
 
+gameRouter.put('/finishGame', (req, res) => {
+  let args = req.body.params;
+  console.log('From finishgame:', args);
+  pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
+  .then(answer => {
+    if (answer.rows[0].is_finished) {
+      res.send('You lost');
+    } else {
+      return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
+    }
+  })
+  .then((arr) => {
+    let p1 = arr[0].rows[0];
+    console.log('p1: ', p1);
+  })
+})
 
 
 

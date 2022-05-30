@@ -25,4 +25,20 @@ const updateUserBoard = (player, dbConn) => {
   return dbConn.query("UPDATE users SET board_id = $1, game_id = $3  WHERE id = ($2) RETURNING id", [player.boardId, player.playerId, player.gameId]);
 }
 
-module.exports = {findOpponent, makeBoard, updateUserBoard};
+const gameStatus = (gameId, dbConn) => {
+  return dbConn.query("SELECT is_finished FROM games WHERE id = $1", [gameId]);
+}
+
+const updateUserIds = (userId, dbConn) => {
+  return dbConn.query("UPDATE users SET board_id = 0, game_id = 0 WHERE id = $1", [userId])
+}
+
+const findUserIds = (gameId, dbConn) => {
+  return dbConn.query("SELECT p1_id, p2_id FROM games WHERE id = ", [gameId]);
+}
+
+const updateFinished = (gameId, dbConn) => {
+  return dbConn.query('UPDATE games SET is_finished = true WHERE id = $1', [gameId])
+}
+
+module.exports = {findOpponent, makeBoard, updateUserBoard, gameStatus, updateUserIds, findUserIds, updateFinished};
