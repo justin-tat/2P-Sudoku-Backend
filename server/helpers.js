@@ -18,11 +18,11 @@ const findOpponent = (userInfo, rooms) => {
 
 
 const makeBoard = (userInfo, dbConn) => {
-  return dbConn.query("INSERT INTO boards (player_id, game_id, board_state, board_solution, answerable_cells, holes) VALUES($1, $2, $3, $4, $5, $6) RETURNING player_id, id, board_state, board_solution, holes, answerable_cells",[userInfo.playerId, userInfo.gameId, userInfo.boardState, userInfo.boardSolution, userInfo.answerableCells, userInfo.holes] );
+  return dbConn.query("INSERT INTO boards (player_id, game_id, board_state, board_solution, answerable_cells, holes) VALUES($1, $2, $3, $4, $5, $6) RETURNING player_id, id, board_state, board_solution, holes, answerable_cells, game_id",[userInfo.playerId, userInfo.gameId, userInfo.boardState, userInfo.boardSolution, userInfo.answerableCells, userInfo.holes] );
 };
 
 const updateUserBoard = (player, dbConn) => {
-  return dbConn.query("UPDATE users SET board_id = ($1) WHERE id = ($2) RETURNING id", [player.boardId, player.playerId]);
+  return dbConn.query("UPDATE users SET board_id = $1, game_id = $3  WHERE id = ($2) RETURNING id", [player.boardId, player.playerId, player.gameId]);
 }
 
 module.exports = {findOpponent, makeBoard, updateUserBoard};
