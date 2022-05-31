@@ -34,7 +34,7 @@ const updateUserIds = (userId, dbConn) => {
 }
 
 const findUserIds = (gameId, dbConn) => {
-  return dbConn.query("SELECT p1_id, p2_id FROM games WHERE id = ", [gameId]);
+  return dbConn.query("SELECT p1_id, p2_id FROM games WHERE id = $1", [gameId]);
 }
 
 const updateFinished = (gameId, dbConn) => {

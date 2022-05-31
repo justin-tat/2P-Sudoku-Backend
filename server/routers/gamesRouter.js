@@ -47,12 +47,12 @@ gameRouter.post('/makeGame', (req, res) => {
     let p2Info = arr[1].rows[0];
     let p1 = {boardId: p1Info.id, playerId: p1Info.player_id, gameId: p1Info.game_id}
     let p2 = {boardId: p2Info.id, playerId: p2Info.player_id, gameId: p1Info.game_id};
-    return Promise.all([helpers.updateUserBoard(p1, pool), helpers.updateUserBoard(p2, pool), p1Info.board_state, p1Info.board_solution, arr[2]]);
+    return Promise.all([helpers.updateUserBoard(p1, pool), helpers.updateUserBoard(p2, pool), p1Info.board_state, p1Info.board_solution, arr[2], p1Info.game_id]);
   })
   .then(toUsers => {
     let p1 = toUsers[0].rows[0].id;
     let p2 = toUsers[1].rows[0].id;
-    let board = {boardState: toUsers[2], boardSolution: toUsers[3], holes: toUsers[4]};
+    let board = {boardState: toUsers[2], boardSolution: toUsers[3], holes: toUsers[4], game_id: toUsers[5]};
     res.send(board);
   })
   .catch(err => {
@@ -102,9 +102,11 @@ gameRouter.put('/updateGame', (req, res) => {
 
 gameRouter.put('/finishGame', (req, res) => {
   let args = req.body.params;
-  console.log('From finishgame:', args);
+  args.boardId = parseInt(args.boardId);
   pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
   .then(answer => {
+    console.log('answer:', answer );
+    console.log('answer.rows[0]: ', answer.rows[0]);
     if (answer.rows[0].is_finished) {
       res.send('You lost');
     } else {
@@ -112,8 +114,11 @@ gameRouter.put('/finishGame', (req, res) => {
     }
   })
   .then((arr) => {
-    let p1 = arr[0].rows[0];
-    console.log('p1: ', p1);
+    let players = arr[0].rows[0];
+    return Promise.all([helpers.updateUserIds(players.p1_id, pool), helpers.updateUserIds(players.p2_id, pool)])
+  })
+  .then(() => {
+    res.send('You won');
   })
 })
 
