@@ -64,22 +64,45 @@ gameRouter.post('/makeGame', (req, res) => {
 gameRouter.get('/getGame', (req, res) => {
   pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells, game_id FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
-
-    //res.send(info.rows[0]);
-    //console.log(info.rows[0]);
     return Promise.all([info.rows[0], helpers.gameStatus(info.rows[0].game_id, pool)]);
   })
   .then(gameStatus => {
     if (gameStatus[1].rows[0].is_finished) {
-      res.send('You lost');
+      console.log('Player lost:');
+      throw new Error('Player lost');
+      
     } else {
-      res.send(gameStatus[0]);
+      console.log('GameStatus[0]', gameStatus[0])
+      return gameStatus[0]
+      
+
     }
-    
+  })
+  .then((gameInfo) => {
+    res.send(gameInfo);
+    throw new Error('Player won');
   })
   .catch(err => {
-    console.log('Error in getGame: ', err);
-    res.status(500).send('Server errored while fetching continued game');
+    console.log('Error in getGame: ', String(err) === 'Error: Player lost');
+    if (String(err) === 'Error: Player lost') {
+      console.log('req.query.userId', req.query.userId);
+      return helpers.updateUserIds(req.query.userId, pool);
+    } else if (String(err) === 'Error: Player won'){
+      throw new Error('Player won');
+    } else {
+      console.log('Unknown error', err);
+      return Promise.reject('Unknown error', err);
+    }
+  })
+  .then(() => {
+    console.log('Successfully updated ids in user record');
+    res.send('You lost');
+  })
+  .catch(err => {
+    if (String(err) !== 'Error: Player won') {
+      console.log('Server errored while fetching continued game');
+      res.status(500).send('Server errored while fetching continued game');
+    }
   })
 });
 
@@ -94,8 +117,9 @@ gameRouter.put('/updateGame', (req, res) => {
 
 /*
 1. Determine whether game ended or not
-  1a.If it did not, then find the userIds from the games table modify the userIds and update the game to finished in games
+  1a.If it did not, then find the userId of the submitting player from the games table modify that person's user table to reflect the update and update the game to finished in games
     1a.1. Send win message
+    1a.2. In the get request, check the status and update that user's record if necessary. 
   1b. If it did then just send the lose message
 
 */
@@ -105,20 +129,22 @@ gameRouter.put('/finishGame', (req, res) => {
   args.boardId = parseInt(args.boardId);
   pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
   .then(answer => {
-    console.log('answer:', answer );
-    console.log('answer.rows[0]: ', answer.rows[0]);
     if (answer.rows[0].is_finished) {
       res.send('You lost');
+      throw new Error('You lost');
     } else {
-      return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
+      //return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
+      return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
     }
-  })
-  .then((arr) => {
-    let players = arr[0].rows[0];
-    return Promise.all([helpers.updateUserIds(players.p1_id, pool), helpers.updateUserIds(players.p2_id, pool)])
   })
   .then(() => {
     res.send('You won');
+  })
+  .catch(err => {
+    if (String(err) !== 'Error: You lost') {
+      'ServerErrored while trying to finish the game'
+      res.status(500).send('ServerErrored while trying to finish the game');
+    }
   })
 })
 
