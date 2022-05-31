@@ -85,7 +85,7 @@ gameRouter.get('/getGame', (req, res) => {
   .catch(err => {
     console.log('Error in getGame: ', String(err) === 'Error: Player lost');
     if (String(err) === 'Error: Player lost') {
-      console.log('req.query.userId', req.query.userId);
+      //console.log('req.query.userId', req.query.userId);
       return helpers.updateUserIds(req.query.userId, pool);
     } else if (String(err) === 'Error: Player won'){
       throw new Error('Player won');
@@ -95,7 +95,7 @@ gameRouter.get('/getGame', (req, res) => {
     }
   })
   .then(() => {
-    console.log('Successfully updated ids in user record');
+    console.log('Successfully updated ids in user record when fetching losing game');
     res.send('You lost');
   })
   .catch(err => {
@@ -125,20 +125,26 @@ gameRouter.put('/updateGame', (req, res) => {
 */
 
 gameRouter.put('/finishGame', (req, res) => {
+  console.log('Hitting the finishGame endpoint');
   let args = req.body.params;
+  let isFinished = '';
   args.boardId = parseInt(args.boardId);
   pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
   .then(answer => {
-    if (answer.rows[0].is_finished) {
-      res.send('You lost');
-      throw new Error('You lost');
-    } else {
-      //return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
-      return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
-    }
+    isFinished = answer.rows[0].is_finished === true ? 'You lost' : 'You won';
+    // if (answer.rows[0].is_finished) {
+    //   res.send('You lost');
+    //   throw new Error('You lost');
+    // } else {
+    //   //return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
+    //   return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
+    // }
+    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
   })
   .then(() => {
-    res.send('You won');
+    console.log('Testing using isFinished instead of errors:', isFinished);
+    res.send(isFinished);
+    //res.send('You won');
   })
   .catch(err => {
     if (String(err) !== 'Error: You lost') {
