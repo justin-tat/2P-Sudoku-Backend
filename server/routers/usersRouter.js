@@ -74,7 +74,6 @@ userRouter.get('/getAccount', (req, res) => {
 //Information has already been verified once you get here
 userRouter.post('/makeAccount', (req, res) => {
   let info = req.body.params;
-  console.log('Found makeAccount: ', info);
   pool.query("INSERT INTO users (name, email, password, rating, difficulty) VALUES($1, $2, $3, 1000, 'easy')", [info.username, info.email, info.password])
   .then(() => {
     res.send('Successfully made account');

@@ -18,7 +18,9 @@ CREATE TABLE users (
   rating SMALLINT NOT NULL,
   difficulty difficultyTypes,
   board_id BIGINT DEFAULT 0,
-  game_id BIGINT DEFAULT 0
+  game_id BIGINT DEFAULT 0,
+  games_played BIGINT DEFAULT 0,
+  highest_rating INT DEFAULT 1000
 );
 
 CREATE TABLE games (

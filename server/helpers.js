@@ -22,7 +22,7 @@ const makeBoard = (userInfo, dbConn) => {
 };
 
 const updateUserBoard = (player, dbConn) => {
-  return dbConn.query("UPDATE users SET board_id = $1, game_id = $3  WHERE id = ($2) RETURNING id", [player.boardId, player.playerId, player.gameId]);
+  return dbConn.query("UPDATE users SET board_id = $1, game_id = $3, games_played = games_played + 1  WHERE id = ($2) RETURNING id", [player.boardId, player.playerId, player.gameId]);
 }
 
 const gameStatus = (gameId, dbConn) => {
@@ -41,4 +41,15 @@ const updateFinished = (gameId, dbConn) => {
   return dbConn.query('UPDATE games SET is_finished = true WHERE id = $1', [gameId])
 }
 
-module.exports = {findOpponent, makeBoard, updateUserBoard, gameStatus, updateUserIds, findUserIds, updateFinished};
+//const updateUserBoard = (userId, )
+
+
+module.exports = {
+  findOpponent, 
+  makeBoard, 
+  updateUserBoard, 
+  gameStatus, 
+  updateUserIds, 
+  findUserIds, 
+  updateFinished
+};

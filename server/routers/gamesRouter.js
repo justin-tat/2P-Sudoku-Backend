@@ -4,12 +4,12 @@ const helpers = require('../helpers.js');
 const {pool} = require('../../database/models.js');
 const gameRouter = express.Router();
 const {generateUniqueBoard} = require('../generateBoard.js');
+const Elo = require('elo-calculator');
 
-
-// 2b.4b:  Insert a record into games with both players info
-// 2b.4c: Pass gameID and playerIDs to boards and create 2 entries in boards (p1 and p2)
-// 2b.4d: Find userID in users table and update users table with board id for each player
-// 2b.4e: Respond to client which should then update state variables and remove modal by setting flag in state
+const elo = new Elo({
+  rating: 1000,
+  k: [40, 20, 10]
+});
 
 gameRouter.post('/makeGame', (req, res) => {
   let info = req.body.params;
@@ -62,20 +62,18 @@ gameRouter.post('/makeGame', (req, res) => {
 });
 
 gameRouter.get('/getGame', (req, res) => {
+  let newRating = 0;
   pool.query('SELECT board_state, player_mistakes, holes, board_solution, answerable_cells, game_id FROM boards WHERE id = $1', [req.query.boardId])
   .then(info => {
     return Promise.all([info.rows[0], helpers.gameStatus(info.rows[0].game_id, pool)]);
   })
   .then(gameStatus => {
     if (gameStatus[1].rows[0].is_finished) {
-      console.log('Player lost:');
       throw new Error('Player lost');
       
     } else {
       console.log('GameStatus[0]', gameStatus[0])
       return gameStatus[0]
-      
-
     }
   })
   .then((gameInfo) => {
@@ -87,6 +85,7 @@ gameRouter.get('/getGame', (req, res) => {
     if (String(err) === 'Error: Player lost') {
       //console.log('req.query.userId', req.query.userId);
       return helpers.updateUserIds(req.query.userId, pool);
+      //return Promise.all([helpers.updateUserIds(req.query.userId, pool), helpers.updateRating(req.query.userId, newRating, pool)])
     } else if (String(err) === 'Error: Player won'){
       throw new Error('Player won');
     } else {
@@ -123,27 +122,20 @@ gameRouter.put('/updateGame', (req, res) => {
   1b. If it did then just send the lose message
 
 */
-
+//Return an object with isFinished and new rating
 gameRouter.put('/finishGame', (req, res) => {
-  console.log('Hitting the finishGame endpoint');
   let args = req.body.params;
   let isFinished = '';
   args.boardId = parseInt(args.boardId);
   pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
   .then(answer => {
     isFinished = answer.rows[0].is_finished === true ? 'You lost' : 'You won';
-    // if (answer.rows[0].is_finished) {
-    //   res.send('You lost');
-    //   throw new Error('You lost');
-    // } else {
-    //   //return Promise.all([helpers.findUserIds(args.gameId, pool), helpers.updateFinished(args.gameId, pool)])
-    //   return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
-    // }
-    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)])
+    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)]);
   })
-  .then(() => {
-    console.log('Testing using isFinished instead of errors:', isFinished);
-    res.send(isFinished);
+  .then((promiseArr) => {
+    // let responseObject = {isFinished: isFinished, newRating: promiseArr[2].rows[0].rating};
+    // res.send(responseObject);
+    res.send({isFinished: isFinished});
     //res.send('You won');
   })
   .catch(err => {
