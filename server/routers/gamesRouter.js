@@ -114,28 +114,25 @@ gameRouter.put('/updateGame', (req, res) => {
   })
 });
 
-/*
-1. Determine whether game ended or not
-  1a.If it did not, then find the userId of the submitting player from the games table modify that person's user table to reflect the update and update the game to finished in games
-    1a.1. Send win message
-    1a.2. In the get request, check the status and update that user's record if necessary. 
-  1b. If it did then just send the lose message
-
-*/
 //Return an object with isFinished and new rating
 gameRouter.put('/finishGame', (req, res) => {
   let args = req.body.params;
-  let isFinished = '';
+  let rating = 0;
   args.boardId = parseInt(args.boardId);
   pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId])
   .then(answer => {
-    isFinished = answer.rows[0].is_finished === true ? 'You lost' : 'You won';
-    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool)]);
+    console.log("checking isFinished:", answer.rows[0].is_finished);
+    let isFinished = answer.rows[0].is_finished === true ? 'You lost' : 'You won';
+    if (answer.rows[0].is_finished) {
+
+    }
+    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool), isFinished]);
   })
   .then((promiseArr) => {
     // let responseObject = {isFinished: isFinished, newRating: promiseArr[2].rows[0].rating};
     // res.send(responseObject);
-    res.send({isFinished: isFinished});
+    //console.log('promiseArr:', promiseArr);
+    res.send({isFinished: promiseArr[2]});
     //res.send('You won');
   })
   .catch(err => {
