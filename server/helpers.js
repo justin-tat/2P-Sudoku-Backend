@@ -30,7 +30,7 @@ const gameStatus = (gameId, dbConn) => {
 }
 
 const updateUserIds = (userId, dbConn) => {
-  return dbConn.query("UPDATE users SET board_id = 0, game_id = 0 WHERE id = $1", [userId])
+  return dbConn.query("UPDATE users SET board_id = 0, game_id = 0 WHERE id = $1", [userId]);
 }
 
 const findUserIds = (gameId, dbConn) => {
@@ -38,10 +38,12 @@ const findUserIds = (gameId, dbConn) => {
 }
 
 const updateFinished = (gameId, dbConn) => {
-  return dbConn.query('UPDATE games SET is_finished = true WHERE id = $1', [gameId])
+  return dbConn.query('UPDATE games SET is_finished = true WHERE id = $1', [gameId]);
 }
 
-//const updateUserBoard = (userId, )
+const getUserStats = (userId, dbConn) => {
+  return dbConn.query('SELECT games_played, highest_rating, rating, name FROM users WHERE id = $1', [userId]);
+}
 
 
 module.exports = {
@@ -51,5 +53,6 @@ module.exports = {
   gameStatus, 
   updateUserIds, 
   findUserIds, 
-  updateFinished
+  updateFinished,
+  getUserStats
 };
