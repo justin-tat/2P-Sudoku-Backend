@@ -53,7 +53,7 @@ io.on("connection", socket => {
   let opponent = '';
 
   socket.on("findGame", userInfo => {
-    console.log(socket.adapter.rooms);
+    //console.log(socket.adapter.rooms);
     opponent = helpers.findOpponent(userInfo, socket.adapter.rooms);
     if (opponent === '') {
       io.to(socket.id).emit('waitingForOpponent');

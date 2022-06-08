@@ -148,19 +148,32 @@ gameRouter.put('/finishGame', (req, res) => {
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 0]
       ]);
-
     } else {
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 1]
       ]);
-    }
 
-    return Promise.all([helpers.updateUserIds(args.userId, pool), helpers.updateFinished(args.gameId, pool), isFinished]);
+    }
+    console.log('elo.players[0].rating', elo.players[0].rating);
+    let reqPlayerRating = Math.round(elo.players[0].rating);
+    let waitingPlayerRating = Math.round(elo.players[1].rating);
+    //Empty elo of players
+    elo.players = [];
+
+    return Promise.all([
+      helpers.updateUserIds(args.userId, pool), 
+      helpers.updateFinished(args.gameId, pool), 
+      isFinished, 
+      helpers.updateRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
+      helpers.updateRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),
+      //helpers.updateHighestRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
+      //helpers.updateHighestRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),
+    ]);
   })
   .then((promiseArr) => {
     // let responseObject = {isFinished: isFinished, newRating: promiseArr[2].rows[0].rating};
     // res.send(responseObject);
-    //console.log('promiseArr:', promiseArr);
+    console.log('promiseArr:', promiseArr);
     res.send({isFinished: promiseArr[2]});
     //res.send('You won');
   })

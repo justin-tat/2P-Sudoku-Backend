@@ -45,6 +45,14 @@ const getUserStats = (userId, dbConn) => {
   return dbConn.query('SELECT games_played, highest_rating, rating, name FROM users WHERE id = $1', [userId]);
 }
 
+const updateRating = (newRating, userId, dbConn) => {
+  return dbConn.query('UPDATE users SET rating = $1 WHERE id = $2 RETURNING rating', [newRating, userId]);
+}
+
+const updateHighestRating = (possibleRating, userId, dbConn) => {
+  return dbConn.query('UPDATE users SET highest_rating = $1 WHERE id = $2 AND highest_rating < rating', [possibleRating, userId, dbConn]);
+}
+
 
 module.exports = {
   findOpponent, 
@@ -54,5 +62,7 @@ module.exports = {
   updateUserIds, 
   findUserIds, 
   updateFinished,
-  getUserStats
+  getUserStats,
+  updateRating,
+  updateHighestRating
 };
