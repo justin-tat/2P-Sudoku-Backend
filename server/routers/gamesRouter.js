@@ -119,27 +119,22 @@ gameRouter.put('/updateGame', (req, res) => {
   // find highest rating/current rating/ gamesPlayed for both.
   // Determine which id is the asking player to find out who won based off of isFinished logic already implemented, calculate new Elos and update asking person's record
 gameRouter.put('/finishGame', (req, res) => {
-  console.log('Finish game req.body.params', req.body.params);
   let args = req.body.params;
   let rating = 0;
   args.boardId = parseInt(args.boardId);
-
+  console.log('Finish game req.body.params', req.body.params);
   helpers.findUserIds(args.gameId, pool)
   .then(userIdsPromise => {
     let userIds = userIdsPromise.rows[0];
     return Promise.all([helpers.getUserStats(userIds.p1_id, pool), helpers.getUserStats(userIds.p2_id, pool), userIds])
   }).then((userStats) => {
     //Pass along userData and determine whether it's finished or not
+    //[0: isFinished, 1: userStats for p1_id, 2: userStats for p2_id, userIds]
     return Promise.all([ pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId]) , userStats[0].rows[0] , userStats[1].rows[0], userStats[2] ]);
   })
   .then(arr => {
-    console.log('Elo.length: ', elo.players.length);
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
-    console.log('p1Stats: ', arr[1]);
-    console.log('p2Stats: ', arr[2]);
-    console.log('arr[3]: ', arr[3]);
-    console.log(`p1_id: ${arr[3].p1_id} ||| p2_id: ${arr[3].p2_id}`);
-    console.log('isFinished: ', isFinished);
+    
     //Tie ids to their stats
     arr[1].id = arr[3].p1_id;
     arr[2].id = arr[3].p2_id;
@@ -154,31 +149,25 @@ gameRouter.put('/finishGame', (req, res) => {
       askingUser = arr[1];
       waitingUser = arr[2];
     } else {
-      askingUser = arr[1];
-      waitingUser = arr[2];
+      askingUser = arr[2];
+      waitingUser = arr[1];
     }
-    console.log('askingUser: ', JSON.stringify(askingUser));
-    console.log('waitingUser: ', JSON.stringify(waitingUser));
-    console.log('arr[2].id:', arr[2].id);
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     if (arr[0].rows[0].is_finished === true) {
-      console.log('Requesting player lost');
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 0]
       ]);
     } else {
-      console.log('Requesting player lost');
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 1]
       ]);
 
     }
-    elo.players.forEach((player, i) => {
-      console.log(`Player ${i}: ${JSON.stringify(player)}`);
-    })
+    //May have to change this later due to asynchronicity shenanigans and resetting elo.players
     let reqPlayerRating = Math.round(elo.players[0].rating);
     let waitingPlayerRating = Math.round(elo.players[1].rating);
+
     //Empty elo of players
     elo.players = [];
 
@@ -188,16 +177,12 @@ gameRouter.put('/finishGame', (req, res) => {
       isFinished, 
       helpers.updateRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
       helpers.updateRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),
-      //helpers.updateHighestRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
-      //helpers.updateHighestRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),
     ]);
   })
   .then((promiseArr) => {
-    // let responseObject = {isFinished: isFinished, newRating: promiseArr[2].rows[0].rating};
-    // res.send(responseObject);
     console.log('requestingPlayer:', promiseArr[3].rows[0]);
     console.log('waitingPlayer:', promiseArr[4].rows[0]);
-    res.send({isFinished: promiseArr[2]});
+    res.send({isFinished: promiseArr[2], newRating: promiseArr[3].rows[0].rating});
     //res.send('You won');
   })
   .catch(err => {
