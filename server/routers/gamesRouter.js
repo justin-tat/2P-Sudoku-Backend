@@ -133,28 +133,50 @@ gameRouter.put('/finishGame', (req, res) => {
     return Promise.all([ pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId]) , userStats[0].rows[0] , userStats[1].rows[0], userStats[2] ]);
   })
   .then(arr => {
+    console.log('Elo.length: ', elo.players.length);
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
     console.log('p1Stats: ', arr[1]);
     console.log('p2Stats: ', arr[2]);
+    console.log('arr[3]: ', arr[3]);
+    console.log(`p1_id: ${arr[3].p1_id} ||| p2_id: ${arr[3].p2_id}`);
+    console.log('isFinished: ', isFinished);
     //Tie ids to their stats
     arr[1].id = arr[3].p1_id;
     arr[2].id = arr[3].p2_id;
     //Determine whether askingUser/requestingPlayer is p1 or p2 and set waitingUser/Player to the other
-    let askingUser = args.userId === arr[1].id ? arr[1] : arr[2];
-    let waitingUser = args.userId === arr[2].id ? arr[2] : arr[1];
+    // let askingUser = args.userId === arr[1].id ? arr[1] : arr[2];
+    // let waitingUser = args.userId === arr[2].id ? arr[1] : arr[2];
+
+    let askingUser = {};
+    let waitingUser = {};
+
+    if(args.userId === arr[1].id) {
+      askingUser = arr[1];
+      waitingUser = arr[2];
+    } else {
+      askingUser = arr[1];
+      waitingUser = arr[2];
+    }
+    console.log('askingUser: ', JSON.stringify(askingUser));
+    console.log('waitingUser: ', JSON.stringify(waitingUser));
+    console.log('arr[2].id:', arr[2].id);
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
-    if (arr[0].rows[0].is_finished) {
+    if (arr[0].rows[0].is_finished === true) {
+      console.log('Requesting player lost');
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 0]
       ]);
     } else {
+      console.log('Requesting player lost');
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 1]
       ]);
 
     }
-    console.log('elo.players[0].rating', elo.players[0].rating);
+    elo.players.forEach((player, i) => {
+      console.log(`Player ${i}: ${JSON.stringify(player)}`);
+    })
     let reqPlayerRating = Math.round(elo.players[0].rating);
     let waitingPlayerRating = Math.round(elo.players[1].rating);
     //Empty elo of players
@@ -173,7 +195,8 @@ gameRouter.put('/finishGame', (req, res) => {
   .then((promiseArr) => {
     // let responseObject = {isFinished: isFinished, newRating: promiseArr[2].rows[0].rating};
     // res.send(responseObject);
-    console.log('promiseArr:', promiseArr);
+    console.log('requestingPlayer:', promiseArr[3].rows[0]);
+    console.log('waitingPlayer:', promiseArr[4].rows[0]);
     res.send({isFinished: promiseArr[2]});
     //res.send('You won');
   })

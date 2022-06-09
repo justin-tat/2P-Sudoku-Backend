@@ -15,7 +15,7 @@ CREATE TABLE users (
   name VARCHAR(80) NOT NULL,
   email VARCHAR(80) NOT NULL,
   password VARCHAR(80) NOT NULL,
-  rating SMALLINT NOT NULL,
+  rating INT NOT NULL,
   difficulty difficultyTypes,
   board_id BIGINT DEFAULT 0,
   game_id BIGINT DEFAULT 0,
