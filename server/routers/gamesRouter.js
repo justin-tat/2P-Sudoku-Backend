@@ -6,11 +6,6 @@ const gameRouter = express.Router();
 const {generateUniqueBoard} = require('../generateBoard.js');
 const Elo = require('elo-calculator');
 
-const elo = new Elo({
-  rating: 1000,
-  k: [40, 20, 10]
-});
-
 gameRouter.post('/makeGame', (req, res) => {
   let info = req.body.params;
   let p1 = info.playerOne;
@@ -133,6 +128,10 @@ gameRouter.put('/finishGame', (req, res) => {
     return Promise.all([ pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId]) , userStats[0].rows[0] , userStats[1].rows[0], userStats[2] ]);
   })
   .then(arr => {
+    const elo = new Elo({
+      rating: 1000,
+      k: [40, 20, 10]
+    });
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
     
     //Tie ids to their stats
@@ -155,9 +154,8 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     if (arr[0].rows[0].is_finished === true) {
-      elo.updateRatings([
-        [reqPlayer, waitingPlayer, 0]
-      ]);
+      throw new Error(JSON.stringify(askingUser.rating));
+
     } else {
       elo.updateRatings([
         [reqPlayer, waitingPlayer, 1]
@@ -180,13 +178,14 @@ gameRouter.put('/finishGame', (req, res) => {
     ]);
   })
   .then((promiseArr) => {
-    console.log('requestingPlayer:', promiseArr[3].rows[0]);
-    console.log('waitingPlayer:', promiseArr[4].rows[0]);
     res.send({isFinished: promiseArr[2], newRating: promiseArr[3].rows[0].rating});
     //res.send('You won');
   })
   .catch(err => {
-    if (String(err) !== 'Error: You lost') {
+    let rating = parseInt(err.message);
+    if (!isNaN(rating)) {
+      res.send({isFinished: 'You lost', newRating: rating});
+    } else {
       console.log('Errored in finishGame: ', err);
       res.status(500).send('ServerErrored while trying to finish the game');
     }
