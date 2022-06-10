@@ -138,9 +138,6 @@ gameRouter.put('/finishGame', (req, res) => {
     arr[1].id = arr[3].p1_id;
     arr[2].id = arr[3].p2_id;
     //Determine whether askingUser/requestingPlayer is p1 or p2 and set waitingUser/Player to the other
-    // let askingUser = args.userId === arr[1].id ? arr[1] : arr[2];
-    // let waitingUser = args.userId === arr[2].id ? arr[1] : arr[2];
-
     let askingUser = {};
     let waitingUser = {};
 
@@ -154,6 +151,7 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     if (arr[0].rows[0].is_finished === true) {
+      //DB has already been updated, so throw an error to skip DB entry
       throw new Error(JSON.stringify(askingUser.rating));
 
     } else {
@@ -170,11 +168,12 @@ gameRouter.put('/finishGame', (req, res) => {
     elo.players = [];
 
     return Promise.all([
-      helpers.updateUserIds(args.userId, pool), 
+      helpers.updateUserIds(args.userId, pool),
       helpers.updateFinished(args.gameId, pool), 
       isFinished, 
       helpers.updateRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
       helpers.updateRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),
+      helpers.updateUserIds(waitingUser.id.toString(), pool), //Maybe
     ]);
   })
   .then((promiseArr) => {

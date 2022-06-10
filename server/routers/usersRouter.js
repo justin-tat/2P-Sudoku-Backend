@@ -40,7 +40,6 @@ userRouter.get('/verifyAccount', (req, res) => {
 userRouter.get('/getAccount', (req, res) => {
   pool.query('SELECT id, name, password, rating, difficulty, board_id FROM users WHERE name = $1', [req.query.username])
   .then(response => {
-    //console.log('user:', response.rows[0])
     if (response.rows.length === 0) {
       throw new Error('Username not found');
     }
@@ -50,7 +49,6 @@ userRouter.get('/getAccount', (req, res) => {
     return response.rows[0];
   })
   .catch(err => {
-    //console.log(String(err));
     if (String(err) === 'Error: Username not found') {
       return Promise.reject('Username not found');
     } else if (String(err) === 'Error: Password did not match') {
