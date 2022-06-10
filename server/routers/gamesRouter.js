@@ -136,7 +136,7 @@ gameRouter.put('/finishGame', (req, res) => {
     // elo.players.forEach((player, i) => {
     //   console.log(`player ${i + 1}: `, player);
     // })
-    console.log('elo.players.length before adding anything EXPECTING 0: ', elo.players.length);
+    //console.log('elo.players.length before adding anything EXPECTING 0: ', elo.players.length);
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
     
     //Tie ids to their stats
@@ -159,7 +159,6 @@ gameRouter.put('/finishGame', (req, res) => {
       //DB has already been updated, so throw an error to skip DB entry. Empty elo.players because it will skip the empty later on.
       elo.players.pop();
       elo.players.pop();
-      //elo.players = [];
       throw new Error(JSON.stringify(askingUser.rating));
 
     } else {
@@ -172,15 +171,15 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayerRating = Math.round(elo.players[0].rating);
     let waitingPlayerRating = Math.round(elo.players[1].rating);
 
-    console.log('Printing out players:');
-    elo.players.forEach((player, i) => {
-      console.log(`player ${i + 1}: `, player);
-    })
+    // console.log('Printing out players:');
+    // elo.players.forEach((player, i) => {
+    //   console.log(`player ${i + 1}: `, player);
+    // })
 
     //Empty elo of players
-    // elo.players = [];
     elo.players.pop();
     elo.players.pop();
+
     console.log('Just popped from elo.players. Expecting 0: ', elo.players.length);
 
     return Promise.all([
