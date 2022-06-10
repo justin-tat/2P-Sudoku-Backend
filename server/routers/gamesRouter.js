@@ -117,7 +117,7 @@ gameRouter.put('/finishGame', (req, res) => {
   let args = req.body.params;
   let rating = 0;
   args.boardId = parseInt(args.boardId);
-  console.log('Finish game req.body.params', req.body.params);
+  //console.log('Finish game req.body.params', req.body.params);
   helpers.findUserIds(args.gameId, pool)
   .then(userIdsPromise => {
     let userIds = userIdsPromise.rows[0];
@@ -128,10 +128,15 @@ gameRouter.put('/finishGame', (req, res) => {
     return Promise.all([ pool.query('SELECT is_finished FROM games WHERE id = $1', [args.gameId]) , userStats[0].rows[0] , userStats[1].rows[0], userStats[2] ]);
   })
   .then(arr => {
-    const elo = new Elo({
+    let elo = new Elo({
       rating: 1000,
       k: [40, 20, 10]
     });
+    // console.log('Printing out players:');
+    // elo.players.forEach((player, i) => {
+    //   console.log(`player ${i + 1}: `, player);
+    // })
+    console.log('elo.players.length before adding anything EXPECTING 0: ', elo.players.length);
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
     
     //Tie ids to their stats
@@ -151,7 +156,10 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     if (arr[0].rows[0].is_finished === true) {
-      //DB has already been updated, so throw an error to skip DB entry
+      //DB has already been updated, so throw an error to skip DB entry. Empty elo.players because it will skip the empty later on.
+      elo.players.pop();
+      elo.players.pop();
+      //elo.players = [];
       throw new Error(JSON.stringify(askingUser.rating));
 
     } else {
@@ -164,8 +172,16 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayerRating = Math.round(elo.players[0].rating);
     let waitingPlayerRating = Math.round(elo.players[1].rating);
 
+    console.log('Printing out players:');
+    elo.players.forEach((player, i) => {
+      console.log(`player ${i + 1}: `, player);
+    })
+
     //Empty elo of players
-    elo.players = [];
+    // elo.players = [];
+    elo.players.pop();
+    elo.players.pop();
+    console.log('Just popped from elo.players. Expecting 0: ', elo.players.length);
 
     return Promise.all([
       helpers.updateUserIds(args.userId, pool),
