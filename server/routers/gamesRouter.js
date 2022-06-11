@@ -64,6 +64,7 @@ gameRouter.get('/getGame', (req, res) => {
   })
   .then(gameStatus => {
     if (gameStatus[1].rows[0].is_finished) {
+    // if (gameStatus[1].rows[0].is_finished !== "") {
       throw new Error('Player lost');
       
     } else {
@@ -138,7 +139,8 @@ gameRouter.put('/finishGame', (req, res) => {
     // })
     //console.log('elo.players.length before adding anything EXPECTING 0: ', elo.players.length);
     let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
-    
+    // let isFinished = arr[0].rows[0].is_finished === "" ? 'You won' : 'You lost';
+
     //Tie ids to their stats
     arr[1].id = arr[3].p1_id;
     arr[2].id = arr[3].p2_id;
@@ -156,6 +158,7 @@ gameRouter.put('/finishGame', (req, res) => {
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     if (arr[0].rows[0].is_finished === true) {
+    // if (arr[0].rows[0].is_finished !== "") {
       //DB has already been updated, so throw an error to skip DB entry. Empty elo.players because it will skip the empty later on.
       elo.players.pop();
       elo.players.pop();
