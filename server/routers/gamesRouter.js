@@ -146,7 +146,6 @@ gameRouter.put('/finishGame', (req, res) => {
       askingUser = arr[2];
       waitingUser = arr[1];
     }
-    console.log("Asking User object: ", askingUser);
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
     // if (arr[0].rows[0].is_finished === true) {
@@ -168,8 +167,6 @@ gameRouter.put('/finishGame', (req, res) => {
     //Empty elo of players
     elo.players.pop();
     elo.players.pop();
-
-    console.log('Just popped from elo.players. Expecting 0: ', elo.players.length);
 
     return Promise.all([
       helpers.updateUserIds(args.userId, pool),
