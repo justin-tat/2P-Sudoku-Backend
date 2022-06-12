@@ -10,7 +10,8 @@ gameRouter.post('/makeGame', (req, res) => {
   let info = req.body.params;
   let p1 = info.playerOne;
   let p2 = info.playerTwo;
-  pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
+  //pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating) VALUES($1, $2, $3, $4, $5, $6) RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
+  pool.query("INSERT INTO games (p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating, is_finished) VALUES($1, $2, $3, $4, $5, $6, '') RETURNING id, p1_id, p2_id", [p1.id, p2.id, p1.name, p2.name, p1.rating, p2.rating])
   .then(id => {
     let info = id.rows[0];
     let holes = 1;
@@ -63,12 +64,12 @@ gameRouter.get('/getGame', (req, res) => {
     return Promise.all([info.rows[0], helpers.gameStatus(info.rows[0].game_id, pool)]);
   })
   .then(gameStatus => {
-    if (gameStatus[1].rows[0].is_finished) {
-    // if (gameStatus[1].rows[0].is_finished !== "") {
+    // if (gameStatus[1].rows[0].is_finished) {
+    if (gameStatus[1].rows[0].is_finished !== "") {
       throw new Error('Player lost');
       
     } else {
-      console.log('GameStatus[0]', gameStatus[0])
+      //console.log('GameStatus[0]', gameStatus[0])
       return gameStatus[0]
     }
   })
@@ -79,7 +80,6 @@ gameRouter.get('/getGame', (req, res) => {
   .catch(err => {
     console.log('Error in getGame: ', String(err) === 'Error: Player lost');
     if (String(err) === 'Error: Player lost') {
-      //console.log('req.query.userId', req.query.userId);
       return helpers.updateUserIds(req.query.userId, pool);
       //return Promise.all([helpers.updateUserIds(req.query.userId, pool), helpers.updateRating(req.query.userId, newRating, pool)])
     } else if (String(err) === 'Error: Player won'){
@@ -110,10 +110,6 @@ gameRouter.put('/updateGame', (req, res) => {
   })
 });
 
-//Return an object with isFinished and new rating
-//Look at games table to find both ids => X
-  // find highest rating/current rating/ gamesPlayed for both.
-  // Determine which id is the asking player to find out who won based off of isFinished logic already implemented, calculate new Elos and update asking person's record
 gameRouter.put('/finishGame', (req, res) => {
   let args = req.body.params;
   let rating = 0;
@@ -133,13 +129,8 @@ gameRouter.put('/finishGame', (req, res) => {
       rating: 1000,
       k: [40, 20, 10]
     });
-    // console.log('Printing out players:');
-    // elo.players.forEach((player, i) => {
-    //   console.log(`player ${i + 1}: `, player);
-    // })
-    //console.log('elo.players.length before adding anything EXPECTING 0: ', elo.players.length);
-    let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
-    // let isFinished = arr[0].rows[0].is_finished === "" ? 'You won' : 'You lost';
+    //let isFinished = arr[0].rows[0].is_finished === true ? 'You lost' : 'You won';
+    let isFinished = arr[0].rows[0].is_finished === "" ? 'You won' : 'You lost';
 
     //Tie ids to their stats
     arr[1].id = arr[3].p1_id;
@@ -155,10 +146,11 @@ gameRouter.put('/finishGame', (req, res) => {
       askingUser = arr[2];
       waitingUser = arr[1];
     }
+    console.log("Asking User object: ", askingUser);
     let reqPlayer = elo.createPlayer(askingUser.rating, parseInt(askingUser.games_played), askingUser.highest_rating, askingUser.id.toString());
     let waitingPlayer = elo.createPlayer(waitingUser.rating, parseInt(waitingUser.games_played), waitingUser.highest_rating, waitingUser.id.toString());
-    if (arr[0].rows[0].is_finished === true) {
-    // if (arr[0].rows[0].is_finished !== "") {
+    // if (arr[0].rows[0].is_finished === true) {
+    if (arr[0].rows[0].is_finished !== "") {
       //DB has already been updated, so throw an error to skip DB entry. Empty elo.players because it will skip the empty later on.
       elo.players.pop();
       elo.players.pop();
@@ -170,14 +162,8 @@ gameRouter.put('/finishGame', (req, res) => {
       ]);
 
     }
-    //May have to change this later due to asynchronicity shenanigans and resetting elo.players
     let reqPlayerRating = Math.round(elo.players[0].rating);
     let waitingPlayerRating = Math.round(elo.players[1].rating);
-
-    // console.log('Printing out players:');
-    // elo.players.forEach((player, i) => {
-    //   console.log(`player ${i + 1}: `, player);
-    // })
 
     //Empty elo of players
     elo.players.pop();
@@ -187,7 +173,7 @@ gameRouter.put('/finishGame', (req, res) => {
 
     return Promise.all([
       helpers.updateUserIds(args.userId, pool),
-      helpers.updateFinished(args.gameId, pool), 
+      helpers.updateFinished(args.gameId, askingUser.name, pool), 
       isFinished, 
       helpers.updateRating(reqPlayerRating, parseInt(reqPlayer.name), pool), 
       helpers.updateRating(waitingPlayerRating, parseInt(waitingPlayer.name), pool),

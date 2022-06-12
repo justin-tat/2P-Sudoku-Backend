@@ -31,8 +31,8 @@ CREATE TABLE games (
   p2_name VARCHAR(80) NOT NULL,
   p1_rating INT NOT NULL,
   p2_rating INT NOT NULL,
-  is_finished BOOLEAN DEFAULT FALSE,
-  -- is_finished VARCHAR(80) DEFAULT "",
+  -- is_finished BOOLEAN DEFAULT FALSE,
+  is_finished VARCHAR(80),
   FOREIGN KEY (p1_id) REFERENCES users(id),
   FOREIGN KEY (p2_id) REFERENCES users(id)
 );
