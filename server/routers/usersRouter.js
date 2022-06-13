@@ -83,4 +83,10 @@ userRouter.post('/makeAccount', (req, res) => {
   
 });
 
+userRouter.get('/gameHistory', (req, res) => {
+  console.log('req.query.userId', req.query.userId);
+  pool.query('SELECT ')
+  res.send('Testing gameHistory');
+})
+
 module.exports = userRouter;
