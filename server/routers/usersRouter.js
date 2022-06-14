@@ -4,6 +4,8 @@ const express = require('express');
 const {pool} = require('../../database/models.js');
 const userRouter = express.Router();
 
+const helpers = require('../helpers.js');
+
 userRouter.get('/', (req, res) => {
   console.log('You have found me bravo');
   res.send('Barebones userRouter');
@@ -84,8 +86,23 @@ userRouter.post('/makeAccount', (req, res) => {
 });
 
 userRouter.get('/gameHistory', (req, res) => {
-  console.log('req.query.userId', req.query.userId);
-  pool.query('SELECT ')
+  helpers.getGames(req.query.userId, pool)
+  .then((games) => {
+    let gameTime = games.rows[0].time;
+    let timeAgo = new Date(gameTime);
+    const rtf = new Intl.RelativeTimeFormat('en', {
+      numeric: 'auto',
+    });
+    const oneDayInMs = 1000 * 60 * 60 * 24;
+    const daysDifference = Math.round(
+      (timeAgo.getTime() - new Date().getTime()) / oneDayInMs,
+    );
+  
+    let newTime = rtf.format(daysDifference, 'minute');
+    console.log('newTime: ', newTime);
+    //console.log('timeAgo: ', timeAgo.getTime());
+    //console.log('games: ', games);
+  })
   res.send('Testing gameHistory');
 })
 

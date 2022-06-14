@@ -50,6 +50,10 @@ const updateRating = (newRating, userId, dbConn) => {
   return dbConn.query('UPDATE users SET rating = $1, highest_rating = CASE WHEN $3 > highest_rating THEN $3 ELSE highest_rating END WHERE id = $2 RETURNING rating', [newRating, userId, newRating]);
 }
 
+const getGames = (userId, dbConn) => {
+  return dbConn.query('SELECT p1_id, p2_id, p1_name, p2_name, p1_rating, p2_rating, time FROM games WHERE p1_id = $1 OR p2_id = $1 ORDER BY time', [userId]);
+}
+
 
 module.exports = {
   findOpponent, 
@@ -61,4 +65,5 @@ module.exports = {
   updateFinished,
   getUserStats,
   updateRating,
+  getGames
 };
