@@ -3,6 +3,7 @@ const axios = require('axios');
 const express = require('express');
 const {pool} = require('../../database/models.js');
 const userRouter = express.Router();
+const timeago = require('timeago.js');
 
 const helpers = require('../helpers.js');
 
@@ -85,25 +86,33 @@ userRouter.post('/makeAccount', (req, res) => {
   
 });
 
+
 userRouter.get('/gameHistory', (req, res) => {
   helpers.getGames(req.query.userId, pool)
   .then((games) => {
-    let gameTime = games.rows[0].time;
-    let timeAgo = new Date(gameTime);
-    const rtf = new Intl.RelativeTimeFormat('en', {
-      numeric: 'auto',
+    let results = [];
+    let user_id = parseInt(req.query.userId);
+    games.rows.forEach((game, index) => {
+      let opponentName = game.p1_id === user_id ? game.p2_name : game.p1_name;
+      let opponentRating = game.p1_id === user_id ? game.p2_rating : game.p1_rating;
+      let winningId = game.is_finished === game.p1_name ? game.p1_id : game.p2_id;
+      let didWin = winningId === user_id ? true : false;
+      let gameTime = timeago.format(game.time);
+
+      results.push({
+        date: gameTime,
+        opponent: opponentName,
+        opponentRating: opponentRating,
+        win: didWin
+      });
+
     });
-    const oneDayInMs = 1000 * 60 * 60 * 24;
-    const daysDifference = Math.round(
-      (timeAgo.getTime() - new Date().getTime()) / oneDayInMs,
-    );
-  
-    let newTime = rtf.format(daysDifference, 'minute');
-    console.log('newTime: ', newTime);
-    //console.log('timeAgo: ', timeAgo.getTime());
-    //console.log('games: ', games);
+    res.send(results);
   })
-  res.send('Testing gameHistory');
+  .catch(err => {
+    console.log('Errored in get gameHistory: ', err);
+    res.status(500).send(err);
+  })
 })
 
 module.exports = userRouter;
