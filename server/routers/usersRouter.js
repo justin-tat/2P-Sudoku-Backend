@@ -72,8 +72,9 @@ userRouter.get('/getAccount', (req, res) => {
   })
 });
 
-//Information has already been verified once you get here
 userRouter.post('/makeAccount', (req, res) => {
+  console.log("req.url: " + req.url);
+  console.log('req.body.params: ', req.body.params);
   let info = req.body.params;
   pool.query("INSERT INTO users (name, email, password, rating, difficulty) VALUES($1, $2, $3, 1000, 'easy')", [info.username, info.email, info.password])
   .then(() => {
@@ -88,6 +89,7 @@ userRouter.post('/makeAccount', (req, res) => {
 
 
 userRouter.get('/gameHistory', (req, res) => {
+  console.log("req.query", req.url);
   helpers.getGames(req.query.userId, pool)
   .then((games) => {
     let results = [];

@@ -65,7 +65,8 @@ io.on("connection", socket => {
     //io.emit("Potential Game", msg);
   });
   socket.on('gameRecordCreated', (info) => {
-    io.to(info.opponent).emit('startGame', info);
+    //io.to(info.opponent).emit('startGame', info);
+    socket.broadcast.emit('startGame', info);
   })
   socket.on('end', function (){
     console.log('Ending socket connection');
